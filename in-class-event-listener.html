@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Button Click Example</title>
+</head>
+<body>
+
+  <button id="myButton">Click Me</button>
+  <p id="message">Nothing happened yet.</p>
+
+  <script>
+    const button = document.getElementById("myButton");
+
+    button.addEventListener("click", function() {
+      document.getElementById("message").innerText = "Wow you clicked it! Teehee";
+      document.body.style.backgroundColor = "lavender";
+      button.innerText = "Clicked!";
+    });
+  </script>
+
+</body>
+</html>

@@ -2,13 +2,435 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Index</title>
-<link rel="stylesheet" href="styles.css"> <!-- Link to external CSS file if you have one-->
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>softest part / prototype v5</title>
+
+<style>
+:root{
+  --mouth: 9px;
+  --kink: 2px;
+  --focus: 63%;
+  --leftShift: 0px;
+  --rightShift: 0px;
+
+  --fluid: .05;
+  --ember: 0;
+  --eye: 0;
+  --ripple: 0;
+  --crease: .18;
+  --scarHeat: 0;
+
+  --emberX: 0px;
+  --eyeX: 0px;
+  --note: .28;
+}
+
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#050609;
+}
+
+#piece{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  isolation:isolate;
+  background:#050609;
+}
+
+/* inside */
+
+.fluid{
+  position:absolute;
+  left:26%;
+  top:0;
+  width:44%;
+  height:100%;
+  background:url("assets/pawel-czerwinski-BP2RioglKXk-unsplash.jpg") center center / cover no-repeat;
+  filter:blur(8px) saturate(.9) contrast(.96) brightness(.74);
+  opacity:var(--fluid);
+  transform:rotate(-1.6deg) scale(1.05);
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+
+.ember{
+  position:absolute;
+  left:34%;
+  top:0;
+  width:30%;
+  height:100%;
+  background:url("assets/teslariu-mihai-BJVXivU2p4M-unsplash.jpg") center 31% / cover no-repeat;
+  filter:blur(5px) saturate(1.04) brightness(.84);
+  opacity:var(--ember);
+  transform:translateX(var(--emberX)) scale(1.02);
+  mix-blend-mode:screen;
+  pointer-events:none;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.82) 16%, rgba(255,255,255,1) 70%, transparent 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.82) 16%, rgba(255,255,255,1) 70%, transparent 100%);
+}
+
+/* quick witness, not a whole reveal */
+.eye-ghost{
+  position:absolute;
+  left:46%;
+  top:0;
+  width:9%;
+  height:100%;
+  background:url("assets/diane-picchiottino-BlKa29--dF4-unsplash.jpg") center 38% / cover no-repeat;
+  filter:blur(6px) saturate(.5) brightness(.66);
+  opacity:var(--eye);
+  transform:translateX(var(--eyeX)) scale(1.03);
+  mix-blend-mode:screen;
+  pointer-events:none;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,1) 40%, rgba(255,255,255,.3) 62%, transparent 84%);
+          mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,1) 40%, rgba(255,255,255,.3) 62%, transparent 84%);
+}
+
+.ripple{
+  position:absolute;
+  left:8vw;
+  bottom:10vh;
+  width:min(38vw, 460px);
+  height:min(20vh, 180px);
+  opacity:var(--ripple);
+  transform:rotate(-9deg);
+  background:
+    repeating-radial-gradient(
+      ellipse at 38% 60%,
+      rgba(255,255,255,.92) 0px,
+      rgba(255,255,255,.92) 1px,
+      transparent 2px,
+      transparent 8px
+    );
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.96) 24%, rgba(255,255,255,.96) 76%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.96) 24%, rgba(255,255,255,.96) 76%, transparent 100%);
+  pointer-events:none;
+}
+
+/* outside */
+
+.skin{
+  position:absolute;
+  top:0;
+  height:100%;
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,.50), rgba(0,0,0,.14) 28%, rgba(0,0,0,.56) 100%),
+    url("assets/isaac-wolff-LQfTnsOvm9Y-unsplash.jpg");
+  background-repeat:no-repeat;
+  background-size:cover;
+  filter:saturate(.82) brightness(.43) contrast(1.12);
+  box-shadow: inset 0 0 90px rgba(0,0,0,.22);
+  will-change:transform, clip-path;
+}
+
+.skin.left{
+  left:0;
+  width:60%;
+  background-position:left center;
+  transform:translateX(var(--leftShift));
+  clip-path:polygon(
+    0 0,
+    100% 0,
+    calc(100% - var(--kink)) calc(var(--focus) - 34%),
+    calc(100% - var(--mouth)) var(--focus),
+    calc(100% - var(--kink)) calc(var(--focus) + 7%),
+    100% 100%,
+    0 100%
+  );
+}
+
+.skin.right{
+  right:0;
+  width:42%;
+  background-position:right center;
+  transform:translateX(var(--rightShift));
+  clip-path:polygon(
+    0 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    var(--kink) calc(var(--focus) + 24%),
+    var(--mouth) var(--focus),
+    var(--kink) calc(var(--focus) - 14%)
+  );
+}
+
+.skin::after{
+  content:"";
+  position:absolute;
+  top:0;
+  width:22px;
+  height:100%;
+  filter:blur(3px);
+  opacity:calc(.12 + var(--crease));
+  mix-blend-mode:screen;
+}
+
+.skin.left::after{
+  right:-8px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.18) 44%, rgba(255,92,122,.2) 100%);
+}
+.skin.right::after{
+  left:-8px;
+  background:linear-gradient(90deg, rgba(104,197,255,.2) 0%, rgba(255,255,255,.18) 56%, transparent 100%);
+}
+
+.crease{
+  position:absolute;
+  left:51%;
+  top:14vh;
+  width:1px;
+  height:70vh;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, transparent, rgba(255,255,255,.20), transparent);
+  opacity:var(--crease);
+  filter:blur(.35px);
+  pointer-events:none;
+}
+
+.scar-glow{
+  position:absolute;
+  left:51%;
+  top:0;
+  width:4px;
+  height:100%;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg,
+    transparent 10%,
+    rgba(255,145,72,.16) 34%,
+    rgba(255,120,40,.18) 56%,
+    transparent 88%
+  );
+  opacity:var(--scarHeat);
+  filter:blur(4px);
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+
+.grain{
+  position:absolute;
+  inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.8) .7px, transparent .8px);
+  background-size:5px 5px;
+  opacity:.05;
+  mix-blend-mode:soft-light;
+  pointer-events:none;
+}
+
+.vignette{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at center, transparent 36%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.69) 100%);
+  pointer-events:none;
+}
+
+.note{
+  position:absolute;
+  right:5vw;
+  bottom:4vh;
+  color:rgba(236,232,226,var(--note));
+  font-family:"Baskerville","Iowan Old Style","Palatino Linotype",serif;
+  font-style:italic;
+  font-size:.8rem;
+  letter-spacing:.14em;
+  transform:rotate(-2.5deg);
+  user-select:none;
+  pointer-events:none;
+}
+
+.subnote{
+  position:absolute;
+  left:3vw;
+  bottom:3.4vh;
+  color:rgba(236,232,226,.14);
+  font-family:"Baskerville","Iowan Old Style","Palatino Linotype",serif;
+  font-size:.63rem;
+  letter-spacing:.16em;
+  text-transform:lowercase;
+  transform:rotate(.8deg);
+  user-select:none;
+  pointer-events:none;
+}
+
+.grabber{
+  position:absolute;
+  left:calc(51% - 108px);
+  top:8vh;
+  width:216px;
+  height:84vh;
+  cursor:ew-resize;
+  pointer-events:auto;
+}
+
+/* maybe the face could still slip more. maybe later */
+
+@media (max-width: 800px){
+  .fluid{ left:13%; width:66%; }
+  .ember{ left:22%; width:46%; }
+  .eye-ghost{ left:42%; width:14%; }
+  .grabber{ left:calc(51% - 94px); width:188px; }
+}
+</style>
 </head>
 <body>
-<h1>This is the index page</h1>
-<style></style>
-<script></script> 
+
+<main id="piece">
+  <div class="fluid"></div>
+  <div class="ember"></div>
+  <div class="eye-ghost"></div>
+  <div class="ripple"></div>
+
+  <div class="skin left"></div>
+  <div class="skin right"></div>
+  <div class="crease"></div>
+  <div class="scar-glow"></div>
+
+  <div class="grain"></div>
+  <div class="vignette"></div>
+
+  <div class="note">pull sideways / not all the way</div>
+  <div class="subnote">study 01 / seam prototype</div>
+
+  <div class="grabber" id="grabber"></div>
+</main>
+
+<script>
+const piece = document.getElementById("piece")
+const grabber = document.getElementById("grabber")
+
+let dragging = false
+let want = 0
+let openNow = 0
+
+let yWant = 63
+let yNow = 63
+
+let scar = 0
+let peak = 0
+let t = 0
+let raf = null
+
+const seamX = () => window.innerWidth * 0.51
+const maxOpen = 104
+
+const clamp = (n,a,b) => Math.max(a, Math.min(b,n))
+
+function paint(){
+  const mouth = 9 + openNow * .72 + scar * .16
+  const kink  = 2 + openNow * .17
+
+  const left  = -(openNow * .59 + scar * .05)
+  const right =  (openNow * .43 + scar * .02)
+
+  const fluid = .04 + openNow / 280 + scar / 500
+
+  const faceBase  = clamp((openNow - 20) / 70, 0, .74)
+  const facePulse = .82 + ((((Math.sin(t * .19 + openNow * .07) + 1) * .5)) * .20)
+  const ember     = faceBase * facePulse
+
+  const eyeBase = clamp((openNow - 64) / 40, 0, .10)
+  const eyePulse = ((Math.sin(t * .31 + scar * .35 + openNow * .1) + 1) * .5)
+  const eye = eyeBase * eyePulse
+
+  const ripple = clamp((openNow - 20) / 360, 0, .13)
+  const crease = .15 + openNow / 430 + scar / 190
+  const scarHeat = clamp((scar / 24) * .82 + Math.max(0, openNow - 38) / 280, 0, .66)
+
+  const emberX = `${(Math.sin(t * .09) * 2.1 - openNow * .018).toFixed(2)}px`
+  const eyeX   = `${(Math.sin(t * .17) * 2.8).toFixed(2)}px`
+  const note   = dragging ? .12 : .28
+
+  piece.style.setProperty("--mouth", `${mouth.toFixed(2)}px`)
+  piece.style.setProperty("--kink", `${kink.toFixed(2)}px`)
+  piece.style.setProperty("--focus", `${yNow.toFixed(2)}%`)
+  piece.style.setProperty("--leftShift", `${left.toFixed(2)}px`)
+  piece.style.setProperty("--rightShift", `${right.toFixed(2)}px`)
+
+  piece.style.setProperty("--fluid", fluid.toFixed(3))
+  piece.style.setProperty("--ember", ember.toFixed(3))
+  piece.style.setProperty("--eye", eye.toFixed(3))
+  piece.style.setProperty("--ripple", ripple.toFixed(3))
+  piece.style.setProperty("--crease", crease.toFixed(3))
+  piece.style.setProperty("--scarHeat", scarHeat.toFixed(3))
+
+  piece.style.setProperty("--emberX", emberX)
+  piece.style.setProperty("--eyeX", eyeX)
+  piece.style.setProperty("--note", note.toFixed(3))
+}
+
+function readPointer(e){
+  const dx = Math.abs(e.clientX - seamX())
+  want = clamp(dx * .87, scar, maxOpen)
+  yWant = clamp((e.clientY / window.innerHeight) * 100, 26, 82)
+  peak = Math.max(peak, want)
+}
+
+function wake(){
+  if(raf) return
+  raf = requestAnimationFrame(loop)
+}
+
+grabber.addEventListener("pointerdown", e => {
+  dragging = true
+  peak = 0
+  grabber.setPointerCapture(e.pointerId)
+  readPointer(e)
+  wake()
+})
+
+window.addEventListener("pointermove", e => {
+  if(!dragging) return
+  readPointer(e)
+})
+
+function letGo(){
+  if(!dragging) return
+
+  dragging = false
+
+  if(peak > 82)       scar = clamp(scar + 6.5, 0, 22)
+  else if(peak > 50)  scar = clamp(scar + 2.2, 0, 22)
+  else                scar = clamp(scar - 1.3, 0, 22)
+
+  want = scar
+  yWant = 63
+  wake()
+}
+
+window.addEventListener("pointerup", letGo)
+window.addEventListener("pointercancel", letGo)
+
+function loop(){
+  raf = null
+  t += dragging ? 1.5 : 1
+
+  if(!dragging && scar > 0){
+    scar *= .9993
+    if(scar < .02) scar = 0
+    want = scar
+  }
+
+  openNow += (want - openNow) * (dragging ? .17 : .11)
+  yNow += (yWant - yNow) * .11
+
+  paint()
+
+  const moving =
+    dragging ||
+    Math.abs(want - openNow) > .08 ||
+    Math.abs(yWant - yNow) > .08 ||
+    scar > .02
+
+  if(moving) wake()
+}
+
+paint()
+</script>
 </body>
 </html>

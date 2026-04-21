@@ -1,4 +1,4 @@
-const ROAD_IMAGE = "AdobeStock_473031827.jpeg";
+const ROAD_IMAGE = "assets/AdobeStock_473031827.jpeg";
 const FOG_SCALE = 0.46;
 const IDLE_RESET_MS = 30000;
 const SOFTEN_MS = 9000;

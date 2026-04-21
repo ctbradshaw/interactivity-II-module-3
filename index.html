@@ -1,105 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>softest part / prototype v5</title>
+<meta charset="UTF-8"> <!-- lets the page use normal text characters correctly -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0"> <!-- makes the page scale correctly on phones/laptops -->
+<title>softest part / prototype v5</title> <!-- title shown in the browser tab -->
 
 <style>
 :root{
-  --mouth: 9px;
-  --kink: 2px;
-  --focus: 63%;
-  --leftShift: 0px;
-  --rightShift: 0px;
+  --mouth: 9px;          /* current width of the seam at its main opening point */
+  --kink: 2px;           /* small sharp bend in the seam edge */
+  --focus: 63%;          /* vertical place where the seam is widest */
+  --leftShift: 0px;      /* how far the left glass panel slides left */
+  --rightShift: 0px;     /* how far the right glass panel slides right */
 
-  --fluid: .05;
-  --ember: 0;
-  --eye: 0;
-  --ripple: 0;
-  --crease: .18;
-  --scarHeat: 0;
+  --fluid: .05;          /* opacity of the fluid texture inside */
+  --ember: 0;            /* opacity of the orange face layer */
+  --eye: 0;              /* opacity of the eye ghost layer */
+  --ripple: 0;           /* opacity of the ripple texture */
+  --crease: .18;         /* opacity of the seam highlight */
+  --scarHeat: 0;         /* glow left behind after stronger pulls */
 
-  --emberX: 0px;
-  --eyeX: 0px;
-  --note: .28;
+  --emberX: 0px;         /* tiny sideways drift of the face layer */
+  --eyeX: 0px;           /* tiny sideways drift of the eye layer */
+  --note: .28;           /* opacity of the instruction text */
 }
 
-*{box-sizing:border-box}
+*{box-sizing:border-box} /* makes width/height include padding and border so layout is easier to control */
+
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#050609;
+  margin:0;              /* removes browser default white margin */
+  width:100%;            /* makes page fill the full browser width */
+  height:100%;           /* makes page fill the full browser height */
+  overflow:hidden;       /* prevents scrolling */
+  background:#050609;    /* dark page background behind everything */
 }
 
 #piece{
-  position:relative;
-  width:100vw;
-  height:100vh;
-  overflow:hidden;
-  isolation:isolate;
-  background:#050609;
+  position:relative;     /* lets all inside layers use absolute positioning relative to this scene */
+  width:100vw;           /* full viewport width */
+  height:100vh;          /* full viewport height */
+  overflow:hidden;       /* crops anything that extends outside the scene */
+  isolation:isolate;     /* keeps blend modes inside this scene instead of affecting the whole page */
+  background:#050609;    /* base background color for the scene */
 }
 
 /* inside */
 
 .fluid{
-  position:absolute;
-  left:26%;
-  top:0;
-  width:44%;
-  height:100%;
-  background:url("assets/pawel-czerwinski-BP2RioglKXk-unsplash.jpg") center center / cover no-repeat;
-  filter:blur(8px) saturate(.9) contrast(.96) brightness(.74);
-  opacity:var(--fluid);
-  transform:rotate(-1.6deg) scale(1.05);
-  mix-blend-mode:screen;
-  pointer-events:none;
+  position:absolute;     /* places this layer freely inside the scene */
+  left:26%;              /* starts the fluid layer a bit right of center */
+  top:0;                 /* aligns it to the top edge */
+  width:44%;             /* makes the fluid layer narrower than the full screen */
+  height:100%;           /* makes it as tall as the scene */
+  background:url("assets/pawel-czerwinski-BP2RioglKXk-unsplash.jpg") center center / cover no-repeat; /* uses the abstract fluid image */
+  filter:blur(8px) saturate(.9) contrast(.96) brightness(.74); /* softens and darkens the fluid so it feels buried under the surface */
+  opacity:var(--fluid);  /* JS updates this when the seam opens */
+  transform:rotate(-1.6deg) scale(1.05); /* adds slight tilt and scale so it feels less flat */
+  mix-blend-mode:screen; /* bright parts glow through the dark scene instead of sitting flat */
+  pointer-events:none;   /* user cannot click or drag this layer */
 }
 
 .ember{
-  position:absolute;
-  left:34%;
-  top:0;
-  width:30%;
-  height:100%;
-  background:url("assets/teslariu-mihai-BJVXivU2p4M-unsplash.jpg") center 31% / cover no-repeat;
-  filter:blur(5px) saturate(1.04) brightness(.84);
-  opacity:var(--ember);
-  transform:translateX(var(--emberX)) scale(1.02);
-  mix-blend-mode:screen;
-  pointer-events:none;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.82) 16%, rgba(255,255,255,1) 70%, transparent 100%);
-          mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.82) 16%, rgba(255,255,255,1) 70%, transparent 100%);
+  position:absolute;     /* places the face layer freely inside the scene */
+  left:34%;              /* positions the face near the seam */
+  top:0;                 /* aligns it to the top */
+  width:30%;             /* keeps the face reveal narrow */
+  height:100%;           /* full scene height */
+  background:url("assets/teslariu-mihai-BJVXivU2p4M-unsplash.jpg") center 31% / cover no-repeat; /* uses the orange face image */
+  filter:blur(5px) saturate(1.04) brightness(.84); /* makes the face soft and dim so it feels submerged */
+  opacity:var(--ember);  /* JS fades the face in as the seam opens */
+  transform:translateX(var(--emberX)) scale(1.02); /* gives the face a slight drift and scale */
+  mix-blend-mode:screen; /* lets the bright orange tones glow into the opening */
+  pointer-events:none;   /* this is visual only */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.82) 16%, rgba(255,255,255,1) 70%, transparent 100%); /* fades the face in/out vertically in Safari/WebKit */
+          mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.82) 16%, rgba(255,255,255,1) 70%, transparent 100%); /* fades the face in/out vertically so it does not look like a hard rectangle */
 }
 
 /* quick witness, not a whole reveal */
 .eye-ghost{
-  position:absolute;
-  left:46%;
-  top:0;
-  width:9%;
-  height:100%;
-  background:url("assets/diane-picchiottino-BlKa29--dF4-unsplash.jpg") center 38% / cover no-repeat;
-  filter:blur(6px) saturate(.5) brightness(.66);
-  opacity:var(--eye);
-  transform:translateX(var(--eyeX)) scale(1.03);
-  mix-blend-mode:screen;
-  pointer-events:none;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,1) 40%, rgba(255,255,255,.3) 62%, transparent 84%);
-          mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,1) 40%, rgba(255,255,255,.3) 62%, transparent 84%);
+  position:absolute;     /* places the eye layer freely inside the scene */
+  left:46%;              /* puts the eye very close to the seam */
+  top:0;                 /* aligns to top */
+  width:9%;              /* keeps the eye layer narrow so it only flashes in a small area */
+  height:100%;           /* full scene height */
+  background:url("assets/diane-picchiottino-BlKa29--dF4-unsplash.jpg") center 38% / cover no-repeat; /* uses the pink eye image */
+  filter:blur(6px) saturate(.5) brightness(.66); /* blurs and tones down the eye so it does not become the main reveal */
+  opacity:var(--eye);    /* JS only lets this show briefly at stronger pulls */
+  transform:translateX(var(--eyeX)) scale(1.03); /* small drift and scale keep it from feeling fixed in place */
+  mix-blend-mode:screen; /* bright eye colors glow through the seam */
+  pointer-events:none;   /* not interactive */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,1) 40%, rgba(255,255,255,.3) 62%, transparent 84%); /* partial vertical mask for Safari/WebKit */
+          mask-image: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,1) 40%, rgba(255,255,255,.3) 62%, transparent 84%); /* makes the eye appear as a broken ghost instead of a full clean image */
 }
 
 .ripple{
-  position:absolute;
-  left:8vw;
-  bottom:10vh;
-  width:min(38vw, 460px);
-  height:min(20vh, 180px);
-  opacity:var(--ripple);
-  transform:rotate(-9deg);
+  position:absolute;     /* places the ripple area inside the scene */
+  left:8vw;              /* puts it in the lower-left area */
+  bottom:10vh;           /* lifts it up from the bottom edge */
+  width:min(38vw, 460px); /* responsive width */
+  height:min(20vh, 180px); /* responsive height */
+  opacity:var(--ripple); /* JS increases this slightly when the seam opens more */
+  transform:rotate(-9deg); /* tilts it so it feels less centered and graphic */
   background:
     repeating-radial-gradient(
       ellipse at 38% 60%,
@@ -107,33 +108,33 @@ html,body{
       rgba(255,255,255,.92) 1px,
       transparent 2px,
       transparent 8px
-    );
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.96) 24%, rgba(255,255,255,.96) 76%, transparent 100%);
-          mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.96) 24%, rgba(255,255,255,.96) 76%, transparent 100%);
-  pointer-events:none;
+    ); /* creates repeating ring lines like pressure waves */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.96) 24%, rgba(255,255,255,.96) 76%, transparent 100%); /* fades the ripple horizontally in Safari/WebKit */
+          mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.96) 24%, rgba(255,255,255,.96) 76%, transparent 100%); /* fades the ripple edges so it feels partial, not like a full pattern block */
+  pointer-events:none;   /* visual only */
 }
 
 /* outside */
 
 .skin{
-  position:absolute;
-  top:0;
-  height:100%;
+  position:absolute;     /* base style for both glass halves */
+  top:0;                 /* starts at the top */
+  height:100%;           /* full scene height */
   background-image:
-    linear-gradient(180deg, rgba(0,0,0,.50), rgba(0,0,0,.14) 28%, rgba(0,0,0,.56) 100%),
-    url("assets/isaac-wolff-LQfTnsOvm9Y-unsplash.jpg");
-  background-repeat:no-repeat;
-  background-size:cover;
-  filter:saturate(.82) brightness(.43) contrast(1.12);
-  box-shadow: inset 0 0 90px rgba(0,0,0,.22);
-  will-change:transform, clip-path;
+    linear-gradient(180deg, rgba(0,0,0,.50), rgba(0,0,0,.14) 28%, rgba(0,0,0,.56) 100%), /* darkens the glass image so the scene stays moody */
+    url("assets/isaac-wolff-LQfTnsOvm9Y-unsplash.jpg"); /* uses the rainy window image */
+  background-repeat:no-repeat; /* prevents the image from tiling */
+  background-size:cover; /* fills the panel with the image */
+  filter:saturate(.82) brightness(.43) contrast(1.12); /* keeps the wet-glass image dark and subdued */
+  box-shadow: inset 0 0 90px rgba(0,0,0,.22); /* adds extra darkness around the inside edges */
+  will-change:transform, clip-path; /* tells the browser these properties will animate */
 }
 
 .skin.left{
-  left:0;
-  width:60%;
-  background-position:left center;
-  transform:translateX(var(--leftShift));
+  left:0;                /* anchors the left panel to the left edge */
+  width:60%;             /* gives the left panel a little more width than the right */
+  background-position:left center; /* lines up the glass image with the left side */
+  transform:translateX(var(--leftShift)); /* JS slides this panel left when opening */
   clip-path:polygon(
     0 0,
     100% 0,
@@ -142,14 +143,14 @@ html,body{
     calc(100% - var(--kink)) calc(var(--focus) + 7%),
     100% 100%,
     0 100%
-  );
+  ); /* cuts the right edge of the left panel into the seam shape */
 }
 
 .skin.right{
-  right:0;
-  width:42%;
-  background-position:right center;
-  transform:translateX(var(--rightShift));
+  right:0;               /* anchors the right panel to the right edge */
+  width:42%;             /* slightly narrower right panel */
+  background-position:right center; /* lines up the glass image with the right side */
+  transform:translateX(var(--rightShift)); /* JS slides this panel right when opening */
   clip-path:polygon(
     0 0,
     100% 0,
@@ -158,279 +159,280 @@ html,body{
     var(--kink) calc(var(--focus) + 24%),
     var(--mouth) var(--focus),
     var(--kink) calc(var(--focus) - 14%)
-  );
+  ); /* cuts the left edge of the right panel into the seam shape */
 }
 
 .skin::after{
-  content:"";
-  position:absolute;
-  top:0;
-  width:22px;
-  height:100%;
-  filter:blur(3px);
-  opacity:calc(.12 + var(--crease));
-  mix-blend-mode:screen;
+  content:"";            /* creates an extra pseudo-layer on both seam edges */
+  position:absolute;     /* positions the pseudo-layer relative to each panel */
+  top:0;                 /* full-height from top */
+  width:22px;            /* narrow seam highlight strip */
+  height:100%;           /* full panel height */
+  filter:blur(3px);      /* softens the highlight */
+  opacity:calc(.12 + var(--crease)); /* JS makes it brighter as the seam opens */
+  mix-blend-mode:screen; /* makes the highlight glow instead of looking like paint */
 }
 
 .skin.left::after{
-  right:-8px;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.18) 44%, rgba(255,92,122,.2) 100%);
+  right:-8px;            /* pushes the highlight slightly outside the panel edge */
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.18) 44%, rgba(255,92,122,.2) 100%); /* pink-white edge light on the left seam side */
 }
+
 .skin.right::after{
-  left:-8px;
-  background:linear-gradient(90deg, rgba(104,197,255,.2) 0%, rgba(255,255,255,.18) 56%, transparent 100%);
+  left:-8px;             /* pushes the highlight slightly outside the panel edge */
+  background:linear-gradient(90deg, rgba(104,197,255,.2) 0%, rgba(255,255,255,.18) 56%, transparent 100%); /* blue-white edge light on the right seam side */
 }
 
 .crease{
-  position:absolute;
-  left:51%;
-  top:14vh;
-  width:1px;
-  height:70vh;
-  transform:translateX(-50%);
-  background:linear-gradient(180deg, transparent, rgba(255,255,255,.20), transparent);
-  opacity:var(--crease);
-  filter:blur(.35px);
-  pointer-events:none;
+  position:absolute;     /* center seam line */
+  left:51%;              /* slight off-center placement */
+  top:14vh;              /* does not run from the very top edge */
+  width:1px;             /* thin seam line */
+  height:70vh;           /* shorter than full height */
+  transform:translateX(-50%); /* centers the line on its x-position */
+  background:linear-gradient(180deg, transparent, rgba(255,255,255,.20), transparent); /* faint vertical line fading in the middle */
+  opacity:var(--crease); /* JS increases this slightly as the seam opens */
+  filter:blur(.35px);    /* softens the line */
+  pointer-events:none;   /* visual only */
 }
 
 .scar-glow{
-  position:absolute;
-  left:51%;
-  top:0;
-  width:4px;
-  height:100%;
-  transform:translateX(-50%);
+  position:absolute;     /* glow that marks remembered damage */
+  left:51%;              /* aligned with the seam */
+  top:0;                 /* full height from top */
+  width:4px;             /* narrow glow strip */
+  height:100%;           /* full scene height */
+  transform:translateX(-50%); /* centers the strip */
   background:linear-gradient(180deg,
     transparent 10%,
     rgba(255,145,72,.16) 34%,
     rgba(255,120,40,.18) 56%,
     transparent 88%
-  );
-  opacity:var(--scarHeat);
-  filter:blur(4px);
-  mix-blend-mode:screen;
-  pointer-events:none;
+  ); /* warm orange glow concentrated in the middle */
+  opacity:var(--scarHeat); /* JS raises this after stronger pulls */
+  filter:blur(4px);      /* makes it glow instead of looking like a line */
+  mix-blend-mode:screen; /* glow effect */
+  pointer-events:none;   /* visual only */
 }
 
 .grain{
-  position:absolute;
-  inset:0;
-  background-image:radial-gradient(rgba(255,255,255,.8) .7px, transparent .8px);
-  background-size:5px 5px;
-  opacity:.05;
-  mix-blend-mode:soft-light;
-  pointer-events:none;
+  position:absolute;     /* grain overlay across whole scene */
+  inset:0;               /* shorthand for top/right/bottom/left 0 */
+  background-image:radial-gradient(rgba(255,255,255,.8) .7px, transparent .8px); /* tiny dots */
+  background-size:5px 5px; /* repeated tiny pattern */
+  opacity:.05;           /* very subtle */
+  mix-blend-mode:soft-light; /* soft texture without overpowering the image */
+  pointer-events:none;   /* visual only */
 }
 
 .vignette{
-  position:absolute;
-  inset:0;
-  background:radial-gradient(circle at center, transparent 36%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.69) 100%);
-  pointer-events:none;
+  position:absolute;     /* dark edge overlay */
+  inset:0;               /* covers whole scene */
+  background:radial-gradient(circle at center, transparent 36%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.69) 100%); /* darkens edges and corners */
+  pointer-events:none;   /* visual only */
 }
 
 .note{
-  position:absolute;
-  right:5vw;
+  position:absolute;     /* small instruction note */
+  right:5vw;             /* places it near bottom-right */
   bottom:4vh;
-  color:rgba(236,232,226,var(--note));
-  font-family:"Baskerville","Iowan Old Style","Palatino Linotype",serif;
-  font-style:italic;
+  color:rgba(236,232,226,var(--note)); /* JS slightly fades this when dragging */
+  font-family:"Baskerville","Iowan Old Style","Palatino Linotype",serif; /* softer, older-looking serif face */
+  font-style:italic;     /* makes the note feel less UI-like */
   font-size:.8rem;
-  letter-spacing:.14em;
-  transform:rotate(-2.5deg);
-  user-select:none;
-  pointer-events:none;
+  letter-spacing:.14em;  /* spaced-out text for a quieter feel */
+  transform:rotate(-2.5deg); /* slight tilt to keep it from feeling too clean */
+  user-select:none;      /* prevents accidental text selection */
+  pointer-events:none;   /* not clickable */
 }
 
 .subnote{
-  position:absolute;
+  position:absolute;     /* tiny low-contrast label */
   left:3vw;
   bottom:3.4vh;
-  color:rgba(236,232,226,.14);
+  color:rgba(236,232,226,.14); /* very faint */
   font-family:"Baskerville","Iowan Old Style","Palatino Linotype",serif;
   font-size:.63rem;
   letter-spacing:.16em;
-  text-transform:lowercase;
-  transform:rotate(.8deg);
+  text-transform:lowercase; /* keeps it feeling draft-like */
+  transform:rotate(.8deg); /* slight tilt */
   user-select:none;
   pointer-events:none;
 }
 
 .grabber{
-  position:absolute;
-  left:calc(51% - 108px);
+  position:absolute;     /* invisible interaction zone over the seam */
+  left:calc(51% - 108px); /* centers the drag area around the seam */
   top:8vh;
   width:216px;
   height:84vh;
-  cursor:ew-resize;
-  pointer-events:auto;
+  cursor:ew-resize;      /* shows side-to-side drag cursor */
+  pointer-events:auto;   /* this layer can receive pointer input */
 }
 
 /* maybe the face could still slip more. maybe later */
 
 @media (max-width: 800px){
-  .fluid{ left:13%; width:66%; }
-  .ember{ left:22%; width:46%; }
-  .eye-ghost{ left:42%; width:14%; }
-  .grabber{ left:calc(51% - 94px); width:188px; }
+  .fluid{ left:13%; width:66%; }      /* widens/repositions fluid layer on smaller screens */
+  .ember{ left:22%; width:46%; }      /* widens/repositions face layer on smaller screens */
+  .eye-ghost{ left:42%; width:14%; }  /* makes eye ghost a little wider on smaller screens */
+  .grabber{ left:calc(51% - 94px); width:188px; } /* slightly smaller drag area on smaller screens */
 }
 </style>
 </head>
 <body>
 
-<main id="piece">
-  <div class="fluid"></div>
-  <div class="ember"></div>
-  <div class="eye-ghost"></div>
-  <div class="ripple"></div>
+<main id="piece"> <!-- main full-screen scene -->
+  <div class="fluid"></div>      <!-- abstract fluid texture underneath -->
+  <div class="ember"></div>      <!-- orange face reveal underneath -->
+  <div class="eye-ghost"></div>  <!-- faint eye ghost underneath -->
+  <div class="ripple"></div>     <!-- lower-left ripple texture -->
 
-  <div class="skin left"></div>
-  <div class="skin right"></div>
-  <div class="crease"></div>
-  <div class="scar-glow"></div>
+  <div class="skin left"></div>  <!-- left half of the wet-glass surface -->
+  <div class="skin right"></div> <!-- right half of the wet-glass surface -->
+  <div class="crease"></div>     <!-- seam highlight -->
+  <div class="scar-glow"></div>  <!-- warm scar memory glow -->
 
-  <div class="grain"></div>
-  <div class="vignette"></div>
+  <div class="grain"></div>      <!-- subtle grain over everything -->
+  <div class="vignette"></div>   <!-- dark edge shading over everything -->
 
-  <div class="note">pull sideways / not all the way</div>
-  <div class="subnote">study 01 / seam prototype</div>
+  <div class="note">pull sideways / not all the way</div> <!-- tiny instruction -->
+  <div class="subnote">study 01 / seam prototype</div>    <!-- tiny WIP note -->
 
-  <div class="grabber" id="grabber"></div>
+  <div class="grabber" id="grabber"></div> <!-- invisible drag area -->
 </main>
 
 <script>
-const piece = document.getElementById("piece")
-const grabber = document.getElementById("grabber")
+const piece = document.getElementById("piece")      // grabs the whole scene so JS can update CSS variables on it
+const grabber = document.getElementById("grabber")  // grabs the invisible drag area
 
-let dragging = false
-let want = 0
-let openNow = 0
+let dragging = false // tracks whether the user is actively dragging
+let want = 0         // target amount the seam wants to open to
+let openNow = 0      // current actual opening amount on screen
 
-let yWant = 63
-let yNow = 63
+let yWant = 63       // target vertical focus point of the seam
+let yNow = 63        // current vertical focus point on screen
 
-let scar = 0
-let peak = 0
-let t = 0
-let raf = null
+let scar = 0         // memory value: how much the seam stays damaged after pulling
+let peak = 0         // strongest opening reached during the current drag
+let t = 0            // time counter used for subtle pulsing motion
+let raf = null       // stores the current animation frame id so we do not start two loops
 
-const seamX = () => window.innerWidth * 0.51
-const maxOpen = 104
+const seamX = () => window.innerWidth * 0.51 // calculates the seam's horizontal position from the viewport width
+const maxOpen = 104                          // maximum seam width allowed
 
-const clamp = (n,a,b) => Math.max(a, Math.min(b,n))
+const clamp = (n,a,b) => Math.max(a, Math.min(b,n)) // keeps a value between a minimum and maximum
 
-function paint(){
-  const mouth = 9 + openNow * .72 + scar * .16
-  const kink  = 2 + openNow * .17
+function paint(){ // updates all the CSS variables based on the current interaction state
+  const mouth = 9 + openNow * .72 + scar * .16 // seam width grows with opening and stays a bit wider with scar memory
+  const kink  = 2 + openNow * .17              // seam bend grows a little as it opens
 
-  const left  = -(openNow * .59 + scar * .05)
-  const right =  (openNow * .43 + scar * .02)
+  const left  = -(openNow * .59 + scar * .05) // left glass panel slides left as the seam opens
+  const right =  (openNow * .43 + scar * .02) // right glass panel slides right, but a little less than the left
 
-  const fluid = .04 + openNow / 280 + scar / 500
+  const fluid = .04 + openNow / 280 + scar / 500 // fluid layer slowly becomes more visible as the seam opens and scars
 
-  const faceBase  = clamp((openNow - 20) / 70, 0, .74)
-  const facePulse = .82 + ((((Math.sin(t * .19 + openNow * .07) + 1) * .5)) * .20)
-  const ember     = faceBase * facePulse
+  const faceBase  = clamp((openNow - 20) / 70, 0, .74) // face stays hidden at first, then fades in after the seam opens enough
+  const facePulse = .82 + ((((Math.sin(t * .19 + openNow * .07) + 1) * .5)) * .20) // small pulse so the face feels unstable, not static
+  const ember     = faceBase * facePulse // final face opacity = drag amount times subtle pulse
 
-  const eyeBase = clamp((openNow - 64) / 40, 0, .10)
-  const eyePulse = ((Math.sin(t * .31 + scar * .35 + openNow * .1) + 1) * .5)
-  const eye = eyeBase * eyePulse
+  const eyeBase = clamp((openNow - 64) / 40, 0, .10) // eye only starts appearing during stronger pulls
+  const eyePulse = ((Math.sin(t * .31 + scar * .35 + openNow * .1) + 1) * .5) // makes the eye flicker in and out a little
+  const eye = eyeBase * eyePulse // final eye opacity
 
-  const ripple = clamp((openNow - 20) / 360, 0, .13)
-  const crease = .15 + openNow / 430 + scar / 190
-  const scarHeat = clamp((scar / 24) * .82 + Math.max(0, openNow - 38) / 280, 0, .66)
+  const ripple = clamp((openNow - 20) / 360, 0, .13) // ripple only becomes slightly visible after the seam opens enough
+  const crease = .15 + openNow / 430 + scar / 190    // seam highlight gets brighter when opened and after repeated pulls
+  const scarHeat = clamp((scar / 24) * .82 + Math.max(0, openNow - 38) / 280, 0, .66) // scar glow rises with both remembered damage and stronger current opening
 
-  const emberX = `${(Math.sin(t * .09) * 2.1 - openNow * .018).toFixed(2)}px`
-  const eyeX   = `${(Math.sin(t * .17) * 2.8).toFixed(2)}px`
-  const note   = dragging ? .12 : .28
+  const emberX = `${(Math.sin(t * .09) * 2.1 - openNow * .018).toFixed(2)}px` // slight face drift so it feels like it slides under the seam
+  const eyeX   = `${(Math.sin(t * .17) * 2.8).toFixed(2)}px`                   // slight eye drift
+  const note   = dragging ? .12 : .28                                          // instruction fades while dragging
 
-  piece.style.setProperty("--mouth", `${mouth.toFixed(2)}px`)
-  piece.style.setProperty("--kink", `${kink.toFixed(2)}px`)
-  piece.style.setProperty("--focus", `${yNow.toFixed(2)}%`)
-  piece.style.setProperty("--leftShift", `${left.toFixed(2)}px`)
-  piece.style.setProperty("--rightShift", `${right.toFixed(2)}px`)
+  piece.style.setProperty("--mouth", `${mouth.toFixed(2)}px`)         // sends seam width to CSS
+  piece.style.setProperty("--kink", `${kink.toFixed(2)}px`)           // sends seam bend to CSS
+  piece.style.setProperty("--focus", `${yNow.toFixed(2)}%`)           // sends seam vertical focus point to CSS
+  piece.style.setProperty("--leftShift", `${left.toFixed(2)}px`)      // sends left panel shift to CSS
+  piece.style.setProperty("--rightShift", `${right.toFixed(2)}px`)    // sends right panel shift to CSS
 
-  piece.style.setProperty("--fluid", fluid.toFixed(3))
-  piece.style.setProperty("--ember", ember.toFixed(3))
-  piece.style.setProperty("--eye", eye.toFixed(3))
-  piece.style.setProperty("--ripple", ripple.toFixed(3))
-  piece.style.setProperty("--crease", crease.toFixed(3))
-  piece.style.setProperty("--scarHeat", scarHeat.toFixed(3))
+  piece.style.setProperty("--fluid", fluid.toFixed(3))                // sends fluid opacity to CSS
+  piece.style.setProperty("--ember", ember.toFixed(3))                // sends face opacity to CSS
+  piece.style.setProperty("--eye", eye.toFixed(3))                    // sends eye opacity to CSS
+  piece.style.setProperty("--ripple", ripple.toFixed(3))              // sends ripple opacity to CSS
+  piece.style.setProperty("--crease", crease.toFixed(3))              // sends seam highlight amount to CSS
+  piece.style.setProperty("--scarHeat", scarHeat.toFixed(3))          // sends scar glow amount to CSS
 
-  piece.style.setProperty("--emberX", emberX)
-  piece.style.setProperty("--eyeX", eyeX)
-  piece.style.setProperty("--note", note.toFixed(3))
+  piece.style.setProperty("--emberX", emberX)                         // sends face drift value to CSS
+  piece.style.setProperty("--eyeX", eyeX)                             // sends eye drift value to CSS
+  piece.style.setProperty("--note", note.toFixed(3))                  // sends note opacity to CSS
 }
 
-function readPointer(e){
-  const dx = Math.abs(e.clientX - seamX())
-  want = clamp(dx * .87, scar, maxOpen)
-  yWant = clamp((e.clientY / window.innerHeight) * 100, 26, 82)
-  peak = Math.max(peak, want)
+function readPointer(e){ // reads mouse / touch position during drag
+  const dx = Math.abs(e.clientX - seamX())                            // measures how far the pointer is from the seam center
+  want = clamp(dx * .87, scar, maxOpen)                               // turns pointer distance into target opening, but never below scar memory or above maxOpen
+  yWant = clamp((e.clientY / window.innerHeight) * 100, 26, 82)       // turns pointer height into seam focus position and keeps it in a safe range
+  peak = Math.max(peak, want)                                         // stores the strongest opening reached during this drag
 }
 
-function wake(){
+function wake(){ // starts the animation loop only if it is not already running
   if(raf) return
   raf = requestAnimationFrame(loop)
 }
 
-grabber.addEventListener("pointerdown", e => {
-  dragging = true
-  peak = 0
-  grabber.setPointerCapture(e.pointerId)
-  readPointer(e)
-  wake()
+grabber.addEventListener("pointerdown", e => { // starts dragging when user presses on the grab zone
+  dragging = true                              // marks drag as active
+  peak = 0                                     // resets strongest opening for this drag
+  grabber.setPointerCapture(e.pointerId)       // keeps receiving pointer events even if the pointer moves outside the box
+  readPointer(e)                               // immediately reads first pointer position
+  wake()                                       // starts animation loop
 })
 
-window.addEventListener("pointermove", e => {
-  if(!dragging) return
-  readPointer(e)
+window.addEventListener("pointermove", e => { // updates drag while the pointer moves
+  if(!dragging) return                        // ignores movement if user is not dragging
+  readPointer(e)                              // updates target opening and focus point
 })
 
-function letGo(){
-  if(!dragging) return
+function letGo(){ // finishes the drag when the user releases
+  if(!dragging) return                       // ignores if not dragging
 
-  dragging = false
+  dragging = false                           // marks drag as ended
 
-  if(peak > 82)       scar = clamp(scar + 6.5, 0, 22)
-  else if(peak > 50)  scar = clamp(scar + 2.2, 0, 22)
-  else                scar = clamp(scar - 1.3, 0, 22)
+  if(peak > 82)       scar = clamp(scar + 6.5, 0, 22) // strong pull leaves a bigger scar
+  else if(peak > 50)  scar = clamp(scar + 2.2, 0, 22) // medium pull leaves a smaller scar
+  else                scar = clamp(scar - 1.3, 0, 22) // weak pull lets the seam heal a bit
 
-  want = scar
-  yWant = 63
-  wake()
+  want = scar                                // after release, seam settles toward the scar amount
+  yWant = 63                                 // seam focus returns toward its resting vertical position
+  wake()                                     // restarts animation loop so the seam can settle
 }
 
-window.addEventListener("pointerup", letGo)
-window.addEventListener("pointercancel", letGo)
+window.addEventListener("pointerup", letGo)       // runs letGo when pointer is released
+window.addEventListener("pointercancel", letGo)   // also runs letGo if pointer event gets canceled
 
-function loop(){
-  raf = null
-  t += dragging ? 1.5 : 1
+function loop(){ // animation loop that updates motion over time
+  raf = null                                     // clears current frame id so wake() can request the next one
+  t += dragging ? 1.5 : 1                        // advances time counter faster during dragging
 
-  if(!dragging && scar > 0){
-    scar *= .9993
-    if(scar < .02) scar = 0
-    want = scar
+  if(!dragging && scar > 0){                     // only slowly heals the scar when user is not dragging
+    scar *= .9993                                // very slow scar fade
+    if(scar < .02) scar = 0                      // snaps tiny scar values to zero
+    want = scar                                  // keeps target opening tied to current scar value
   }
 
-  openNow += (want - openNow) * (dragging ? .17 : .11)
-  yNow += (yWant - yNow) * .11
+  openNow += (want - openNow) * (dragging ? .17 : .11) // eases the actual opening toward its target, faster while dragging
+  yNow += (yWant - yNow) * .11                         // eases seam focus vertically toward its target
 
-  paint()
+  paint()                                             // updates all CSS values for the new frame
 
   const moving =
-    dragging ||
-    Math.abs(want - openNow) > .08 ||
-    Math.abs(yWant - yNow) > .08 ||
-    scar > .02
+    dragging ||                                       // keep animating if user is dragging
+    Math.abs(want - openNow) > .08 ||                // keep animating if seam width is still changing
+    Math.abs(yWant - yNow) > .08 ||                  // keep animating if seam position is still changing
+    scar > .02                                       // keep animating if scar is still visible
 
-  if(moving) wake()
+  if(moving) wake()                                  // requests another frame only when something is still moving
 }
 
-paint()
+paint() // draws the starting state once on page load
 </script>
 </body>
 </html>

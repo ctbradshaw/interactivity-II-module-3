@@ -1,12 +1,15 @@
 // main knobs for the whole thing
-
-const ROAD_IMAGE = "assets/AdobeStock_473031827.jpeg";
+// ROAD_IMAGE is the main swap point if I change the photo later.
+// FOG_SCALE keeps the canvas smaller than the screen so it runs smoother.
+const ROAD_IMAGE = "../AdobeStock_473031827.jpeg";
 const FOG_SCALE = 0.46;
 const IDLE_RESET_MS = 30000;
 const SOFTEN_MS = 9000;
 const HINT_DELAY_MS = 8500;
 
 // these are placed by eye on the road
+// x and y are like percent positions from 0 to 1.
+// reach is how close the click has to be to count.
 const storyLines = [
   { text: "you were already on the road when i found it", x: 0.5, y: 0.84, w: 220, tilt: -2, reach: 205 },
   { text: "the pale line kept slipping under your shoes", x: 0.76, y: 0.71, w: 220, tilt: 5, reach: 188 },
@@ -105,6 +108,7 @@ style.textContent = `
 
   .phrases { inset: 0; pointer-events: none; z-index: 4; }
 
+  /* tiny instruction, but not a whole menu */
   .whisper {
     left: 50%;
     bottom: 18px;
@@ -122,6 +126,7 @@ style.textContent = `
 
   .whisper.dim { opacity: .34; }
 
+  /* little marks so there is some progress feeling */
   .progress {
     left: 18px;
     bottom: 19px;
@@ -150,6 +155,7 @@ style.textContent = `
   .progress.done { opacity: .72; }
 
   /* words on the road */
+  /* they start basically invisible and then drift in */
   .line {
     position: absolute;
     margin: 0;
@@ -167,18 +173,21 @@ style.textContent = `
     text-shadow: 0 0 12px rgba(241, 243, 245, .11), 0 0 18px rgba(20, 24, 29, .16);
   }
 
+  /* old memories stay but get weaker */
   .line.soft {
     opacity: .46;
     filter: blur(1.2px);
     color: rgba(39, 45, 54, .6);
   }
 
+  /* current means it is waking up but not fully found yet */
   .line.current {
     opacity: .22;
     filter: blur(3px);
     color: rgba(26, 34, 43, .42);
   }
 
+  /* bright is the main readable moment */
   .line.bright {
     opacity: .96;
     filter: blur(.1px);
@@ -192,6 +201,7 @@ style.textContent = `
 
   .line.last.bright { color: rgba(27, 30, 35, .95); }
 
+  /* ending uses this to let all the words come back */
   .line.remembered {
     opacity: .62;
     filter: blur(.65px);
@@ -220,6 +230,7 @@ style.textContent = `
 
   .pulse.live { animation: pulseOut 880ms ease-out; }
 
+  /* this is the hint glow and the found glow */
   .marker {
     left: 0;
     top: 0;
@@ -276,7 +287,7 @@ function makeThing(tag, className, text) {
   return thing;
 }
 
-// build the page with js 
+// build the page with js instead of writing a bunch of html
 const scene = makeThing("div", "scene");
 const road = makeThing("div", "road");
 const roadWash = makeThing("div", "road-wash");
@@ -315,7 +326,12 @@ for (let i = 0; i < storyLines.length; i += 1) {
 
 const ctx = mist.getContext("2d");
 
+// viewW/viewH are real screen size.
+// mistW/mistH are the smaller canvas size.
 let viewW = 0, viewH = 0, mistW = 0, mistH = 0;
+
+// basic play state
+// nextStoryIndex is the next phrase the road is waiting for.
 let dragging = false, activePointer = null, lastPoint = null;
 let nextStoryIndex = 0, currentLine = null;
 let idleTimer = null, pulseTimer = null, hintTimer = null;
@@ -324,6 +340,7 @@ let hintIsOn = false, endingShown = false;
 
 // draws one fog oval
 function mistOval(x, y, rx, ry, alpha, tone) {
+  // I scale a circle instead of drawing an ellipse by hand.
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(rx, ry);
@@ -336,6 +353,7 @@ function mistOval(x, y, rx, ry, alpha, tone) {
 
 // clears fog softly, not like a hard eraser
 function softClear(x, y, r, alpha) {
+  // black works here because destination-out uses alpha, not the color.
   const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
   grad.addColorStop(0, "rgba(0,0,0," + alpha + ")");
   grad.addColorStop(0.58, "rgba(0,0,0," + (alpha * 0.34) + ")");
@@ -348,28 +366,33 @@ function softClear(x, y, r, alpha) {
 
 // redraws the fog from scratch
 function redoMist() {
+  // first make the main fog sheet.
   ctx.clearRect(0, 0, mistW, mistH);
   ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "rgba(202,209,218,.72)";
   ctx.fillRect(0, 0, mistW, mistH);
 
+  // big uneven fog patches so it doesn't feel flat.
   mistOval(mistW * 0.5, mistH * 0.14, mistW * 0.23, mistH * 0.12, 0.25);
   mistOval(mistW * 0.18, mistH * 0.34, mistW * 0.14, mistH * 0.11, 0.16);
   mistOval(mistW * 0.8, mistH * 0.32, mistW * 0.18, mistH * 0.13, 0.16);
   mistOval(mistW * 0.5, mistH * 0.56, mistW * 0.24, mistH * 0.12, 0.11);
 
+  // darker top and sides gives the morning photo a night leftover feeling.
   ctx.fillStyle = "rgba(42,49,60,.11)";
   ctx.fillRect(0, 0, mistW, mistH * 0.28);
   ctx.fillStyle = "rgba(36,42,53,.055)";
   ctx.fillRect(0, 0, mistW * 0.18, mistH);
   ctx.fillRect(mistW * 0.82, 0, mistW * 0.18, mistH);
 
+  // a few random fog bits make each reset a little different.
   for (let i = 0; i < 12; i += 1) {
     mistOval(Math.random() * mistW, Math.random() * mistH, 20 + Math.random() * 80, 14 + Math.random() * 44, 0.03 + Math.random() * 0.05);
   }
 }
 
 function fitMist() {
+  // canvas is lower-res on purpose. CSS blur hides that and saves work.
   const rect = scene.getBoundingClientRect();
   const scale = FOG_SCALE * Math.min(window.devicePixelRatio || 1, 1.08);
 
@@ -383,6 +406,7 @@ function fitMist() {
 }
 
 function getSpot(event) {
+  // vx/vy are screen coords. x/y are matching canvas coords.
   const rect = scene.getBoundingClientRect();
   const vx = event.clientX - rect.left;
   const vy = event.clientY - rect.top;
@@ -390,6 +414,7 @@ function getSpot(event) {
 }
 
 function pulseSpot(vx, vy) {
+  // removing and adding the class restarts the same CSS animation.
   pulse.style.left = vx + "px";
   pulse.style.top = vy + "px";
   pulse.classList.remove("live");
@@ -418,6 +443,7 @@ function hideGlow() {
 function giveHint() {
   if (nextStoryIndex >= storyLines.length) return;
 
+  // hint only points at the next needed phrase, not all of them.
   const line = storyLines[nextStoryIndex];
   placeGlow(line);
   marker.classList.remove("found");
@@ -432,6 +458,7 @@ function giveHint() {
 }
 
 function foundGlow(line) {
+  // same glow element gets reused so the DOM does not grow.
   placeGlow(line);
   marker.classList.remove("live", "found");
   void marker.offsetWidth;
@@ -442,6 +469,7 @@ function foundGlow(line) {
 }
 
 function markProgress() {
+  // progress marks fill from left to right.
   for (let i = 0; i < progressMarks.length; i += 1) {
     progressMarks[i].classList.toggle("on", i < nextStoryIndex);
   }
@@ -450,12 +478,14 @@ function markProgress() {
 
 // this is the main drag feeling
 function rubMist(from, to) {
+  // break the drag path into small soft circles.
+  // it makes the clearing feel like disturbed mist instead of one hard brush.
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const dist = Math.hypot(dx, dy);
   const steps = Math.max(1, Math.ceil(dist / 10));
 
-  ctx.globalCompositeOperation = "destination-out";
+  ctx.globalCompositeOperation = "destination-out"; // this erases fog
 
   for (let i = 0; i <= steps; i += 1) {
     const t = i / steps;
@@ -464,6 +494,7 @@ function rubMist(from, to) {
     const size = 12 + Math.min(11, dist * 0.05);
 
     softClear(x, y, size, 0.14);
+    // extra nearby clears make the edge less perfect.
     softClear(x + (Math.random() * 8 - 4), y + (Math.random() * 8 - 4), size * 0.82, 0.1);
     if (Math.random() < 0.55) softClear(x + (Math.random() * 12 - 6), y + (Math.random() * 10 - 5), size * 0.58, 0.07);
   }
@@ -471,11 +502,13 @@ function rubMist(from, to) {
   ctx.globalCompositeOperation = "source-over";
 
   if (Math.random() < 0.6) {
+    // a tiny darker smear trails behind sometimes.
     mistOval(to.x + (Math.random() * 16 - 8), to.y + (Math.random() * 12 - 6), 8 + Math.random() * 18, 6 + Math.random() * 10, 0.028, "rgba(92,104,118,.038)");
   }
 }
 
 function quietLine(line) {
+  // after a while the readable phrase becomes residue.
   if (!line || endingShown) return;
   line.node.classList.remove("bright", "current");
   line.node.classList.add("soft");
@@ -484,11 +517,13 @@ function quietLine(line) {
 function showLine(line) {
   if (!line) return;
 
+  // only one phrase should feel like it is really arriving.
   clearTimeout(line.timer);
   line.node.classList.remove("remembered", "soft", "current");
   line.node.classList.add("bright");
 
   if (!line.seen) {
+    // first time finding it gets the pretty little reward glow.
     line.seen = true;
     foundGlow(line);
   }
@@ -499,18 +534,23 @@ function showLine(line) {
 function endingBit() {
   if (endingShown) return;
 
+  // the end makes the road remember everything for one moment.
   endingShown = true;
   scene.classList.add("ending");
   smallSay("for a second, it all comes back.", false);
 
   ctx.globalCompositeOperation = "destination-out";
+  // open up the middle of the mist so the final memory breathes.
   softClear(mistW * 0.5, mistH * 0.28, Math.min(mistW, mistH) * 0.34, 0.16);
   softClear(mistW * 0.5, mistH * 0.54, Math.min(mistW, mistH) * 0.26, 0.1);
   ctx.globalCompositeOperation = "source-over";
+
+  // then add two dark wisps so it is not just a happy glow.
   mistOval(mistW * 0.18, mistH * 0.32, mistW * 0.18, mistH * 0.025, 0.05, "rgba(13,18,25,.05)");
   mistOval(mistW * 0.82, mistH * 0.22, mistW * 0.2, mistH * 0.03, 0.045, "rgba(12,16,23,.045)");
 
   for (let i = 0; i < storyLines.length; i += 1) {
+    // stop all the fade timers and force the whole story to stay visible.
     const line = storyLines[i];
     clearTimeout(line.timer);
     line.node.classList.remove("soft", "current", "bright");
@@ -521,6 +561,7 @@ function endingBit() {
 }
 
 function howFar(line, vx, vy) {
+  // distance from click to the hidden phrase spot.
   const px = line.x * viewW;
   const py = line.y * viewH;
   return Math.hypot(vx - px, vy - py);
@@ -531,6 +572,8 @@ function tryStory(vx, vy) {
   if (nextStoryIndex >= storyLines.length) return false;
 
   const nextLine = storyLines[nextStoryIndex];
+
+  // hints make the search a bit more forgiving.
   const kindness = hintIsOn ? 95 : 45;
   if (howFar(nextLine, vx, vy) > nextLine.reach + kindness) return false;
 
@@ -542,6 +585,8 @@ function tryStory(vx, vy) {
   currentLine = nextLine;
   nextStoryIndex += 1;
   missCount = 0;
+
+  // once the phrase is found, hide the guide and fill progress.
   hideGlow();
   markProgress();
 
@@ -555,6 +600,7 @@ function tryStory(vx, vy) {
 }
 
 function checkCurrent(vx, vy) {
+  // dragging near the phrase keeps it readable longer.
   if (!currentLine) return;
   if (howFar(currentLine, vx, vy) < currentLine.reach) {
     showLine(currentLine);
@@ -566,12 +612,15 @@ function checkCurrent(vx, vy) {
 function mistBack() {
   if (dragging || endingShown || !mistW || !mistH) return;
 
+  // quietFor decides how much fog gets to creep back in.
   const quietFor = Date.now() - lastActionAt;
   if (quietFor < 120) return;
 
   const alpha = quietFor > 2400 ? 0.06 : 0.03;
   const x = Math.random() * mistW;
   const y = Math.random() * mistH;
+
+  // as more phrases are found, the fog gets more wrong.
   const badFog = nextStoryIndex / storyLines.length;
   const tone = quietFor > 1800 && Math.random() < 0.35
     ? "rgba(122,132,145," + (alpha * 0.65) + ")"
@@ -580,11 +629,13 @@ function mistBack() {
   mistOval(x, y, 18 + Math.random() * 62, 14 + Math.random() * 36, alpha, tone);
 
   if (nextStoryIndex > 1 && Math.random() < 0.08 + badFog * 0.16) {
+    // these are the black wisps corrupting the normal white mist.
     const black = 0.014 + badFog * 0.03;
     mistOval(x + Math.random() * 70 - 35, y + Math.random() * 44 - 22, 38 + Math.random() * 100, 5 + Math.random() * 15, black, "rgba(12,17,24," + black + ")");
   }
 
   if (quietFor > 2200) {
+    // a very light sheet helps the fog heal itself.
     ctx.fillStyle = "rgba(214,219,225,.018)";
     ctx.fillRect(0, 0, mistW, mistH);
   }
@@ -592,17 +643,20 @@ function mistBack() {
 
 // keeps track of hints and the auto reset
 function markWake() {
+  // every real action restarts the timers.
   lastActionAt = Date.now();
   clearTimeout(idleTimer);
   clearTimeout(hintTimer);
 
   idleTimer = setTimeout(restart, IDLE_RESET_MS);
   hintTimer = setTimeout(() => {
+    // hints only show after waiting, not instantly.
     if (!dragging) giveHint();
   }, HINT_DELAY_MS);
 }
 
 function restart() {
+  // this is used by the idle reset and by pressing r.
   clearTimeout(hintTimer);
 
   dragging = false;
@@ -618,10 +672,13 @@ function restart() {
   pulse.classList.remove("live");
   hideGlow();
   redoMist();
+
+  // put the small cue and progress back to the start.
   smallSay("click the road. drag where the mist opens.", false);
   markProgress();
 
   for (let i = 0; i < storyLines.length; i += 1) {
+    // remove all the reveal classes from every phrase.
     const line = storyLines[i];
     clearTimeout(line.timer);
     line.seen = false;
@@ -633,17 +690,21 @@ function restart() {
 function pressDown(event) {
   if (activePointer !== null) return;
 
+  // pointer capture keeps the drag working even if the finger slides fast.
   activePointer = event.pointerId;
   dragging = true;
   mist.setPointerCapture(event.pointerId);
 
   const spot = getSpot(event);
   lastPoint = spot;
+
+  // one click does a pulse, clears a little fog, and checks story progress.
   pulseSpot(spot.vx, spot.vy);
   rubMist(spot, { x: spot.x + 1, y: spot.y + 1 });
   markWake();
 
   if (!tryStory(spot.vx, spot.vy)) {
+    // after a few misses, the road gives a quiet hint.
     missCount += 1;
     if (missCount > 2) giveHint();
   }
@@ -658,6 +719,7 @@ function dragAround(event) {
   const prev = lastPoint || spot;
   const dist = Math.hypot(spot.vx - prev.vx, spot.vy - prev.vy);
 
+  // tiny movements are ignored so the canvas is not redrawing too much.
   if (dist < 1.5) return;
 
   rubMist(prev, spot);
@@ -669,6 +731,7 @@ function dragAround(event) {
 function letGo(event) {
   if (event.pointerId !== activePointer) return;
 
+  // release capture so the next click can start fresh.
   if (mist.hasPointerCapture(event.pointerId)) {
     mist.releasePointerCapture(event.pointerId);
   }
@@ -678,6 +741,7 @@ function letGo(event) {
   activePointer = null;
 }
 
+// start the piece
 fitMist();
 markProgress();
 markWake();
@@ -694,4 +758,5 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
+// slow fog timer. this is cheaper than a full animation loop.
 setInterval(mistBack, 240);

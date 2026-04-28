@@ -2,7 +2,7 @@
 // move through the fog. no clicking needed.
 // the road gives the lines back one at a time.
 
-const PHOTO = "../AdobeStock_473031827.jpeg";
+const PHOTO = "assets/AdobeStock_473031827.jpeg";
 
 const poem = [
   { text: "you were already on the road when i found it",           x:.50, y:.84, w:230, tilt:-2 },
